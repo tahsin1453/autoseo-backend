@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as cheerio from "cheerio";
+import cheerio from "cheerio";
 
 // TARANACAK RAKİP SİTELER
 const RAKIPLER = [
@@ -9,67 +9,47 @@ const RAKIPLER = [
     "https://www.elektrikci.com.tr/"
 ];
 
-// URL TEMİZLEME – invalid URL hatasını tamamen çözer
+// URL TEMİZLEME
 function cleanUrl(url) {
     try {
         url = url.trim();
 
-        if (!url.startsWith("http")) {
+        if (!url.startsWith("http"))
             url = "https://" + url;
-        }
 
-        if (!url.endsWith("/")) {
+        if (!url.endsWith("/"))
             url += "/";
-        }
 
         return new URL(url).href;
     } catch {
-        console.log("❌ Geçersiz URL atlandı:", url);
+        console.log("❌ Geçersiz URL:", url);
         return null;
     }
 }
 
-// Rastgele rakip seç
-function randomRakip() {
-    return RAKIPLER[Math.floor(Math.random() * RAKIPLER.length)];
-}
-
-// CRAWLER
 export async function crawl(url) {
     const clean = cleanUrl(url);
     if (!clean) return null;
 
     try {
-        console.log("Tarama başlıyor:", clean);
+        console.log("Tarama:", clean);
 
-        const response = await axios.get(clean, {
+        const res = await axios.get(clean, {
             headers: {
-                "User-Agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114 Safari/537.36"
+                "User-Agent": "Mozilla/5.0 Chrome/120"
             },
             timeout: 15000
         });
 
-        const html = response.data;
-        const $ = cheerio.load(html);
-
-        const title = $("title").text().trim() || "Başlık bulunamadı";
-        const description =
-            $('meta[name="description"]').attr("content")?.trim() ||
-            "Açıklama bulunamadı";
+        const $ = cheerio.load(res.data);
 
         return {
             url: clean,
-            title,
-            description
+            title: $("title").text().trim() || "Başlık bulunamadı",
+            description:
+                $('meta[name="description"]').attr("content")?.trim() ||
+                "Açıklama yok"
         };
     } catch (err) {
-        console.error("❌ Crawler hatası:", err.message);
-        return null;
-    }
-}
-
-// Rastgele tarayıcı
-export async function crawlRandom() {
-    return await crawl(randomRakip());
-}
+        console.log("Crawler error:", err.message);
+        r
